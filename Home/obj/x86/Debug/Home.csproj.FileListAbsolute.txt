@@ -5,3 +5,4 @@ c:\users\tra quang kieu\documents\visual studio 2010\Projects\Home\Home\obj\x86\
 c:\users\tra quang kieu\documents\visual studio 2010\Projects\Home\Home\obj\x86\Debug\Home.csproj.GenerateResource.Cache
 c:\users\tra quang kieu\documents\visual studio 2010\Projects\Home\Home\obj\x86\Debug\Home.exe
 c:\users\tra quang kieu\documents\visual studio 2010\Projects\Home\Home\obj\x86\Debug\Home.pdb
+C:\Users\Tra Quang Kieu\documents\visual studio 2010\Projects\Home\Home\obj\x86\Debug\Home.csprojResolveAssemblyReference.cache

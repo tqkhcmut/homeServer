@@ -39,6 +39,7 @@
             this.textBoxState = new System.Windows.Forms.TextBox();
             this.timerUI = new System.Windows.Forms.Timer(this.components);
             this.backgroundWorkerListenClient = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorkerClientProcess = new System.ComponentModel.BackgroundWorker();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -52,7 +53,7 @@
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(260, 119);
+            this.groupBox1.Size = new System.Drawing.Size(360, 119);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Home Devices";
@@ -141,23 +142,27 @@
             // 
             this.backgroundWorkerListenClient.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerListenClient_DoWork);
             // 
+            // backgroundWorkerClientProcess
+            // 
+            this.backgroundWorkerClientProcess.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerClientProcess_DoWork);
+            // 
             // Home
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(284, 162);
+            this.ClientSize = new System.Drawing.Size(384, 162);
             this.Controls.Add(this.textBoxState);
             this.Controls.Add(this.groupBox1);
+            this.KeyPreview = true;
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(300, 200);
-            this.MinimumSize = new System.Drawing.Size(300, 200);
+            this.MaximumSize = new System.Drawing.Size(400, 200);
+            this.MinimumSize = new System.Drawing.Size(400, 200);
             this.Name = "Home";
             this.Text = "Home Devices";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Home_closing);
             this.Load += new System.EventHandler(this.Home_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.hotkey);
-            this.KeyPreview = true;
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -177,6 +182,7 @@
         private System.Windows.Forms.TextBox textBoxState;
         private System.Windows.Forms.Timer timerUI;
         private System.ComponentModel.BackgroundWorker backgroundWorkerListenClient;
+        private System.ComponentModel.BackgroundWorker backgroundWorkerClientProcess;
 
     }
 }

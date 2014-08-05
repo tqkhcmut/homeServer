@@ -22,11 +22,27 @@ namespace Home
         private StreamReader str;
         private StreamWriter stw;
         private TcpListener listener;
+        private struct MessageState
+        {
+            public MessageState(String msg, int duration)
+            {
+                this.msg = msg;
+                this.duration = duration;
+            }
+            public string msg;
+            public int duration;
+            public override string ToString()
+            {
+                return String.Format("Message: {0}. Duration: {1}", this.msg, this.duration);
+            }
+        };
+        private Queue<MessageState> states = new Queue<MessageState>();
+        private Queue<string> Command = new Queue<string>();
 
         private void changeState(String msg, int ms) 
         {
-            this.textBoxState.Text = msg;
-            this.delayHide = ms/100;
+            MessageState newState = new MessageState(msg, ms / 100);
+            states.Enqueue(newState);
         }
 
         public Home()
@@ -36,7 +52,7 @@ namespace Home
             IPAddress[] ipAddr = Dns.GetHostAddresses(Dns.GetHostName());
             if (ipAddr.Length == 0)
             {
-                changeState("Cannot get IP address, use the default IP.", 5000);
+                changeState("Cannot get IP address, use the default IP.", 3000);
             }
             else
             {
@@ -45,7 +61,7 @@ namespace Home
                     if (ip.AddressFamily == AddressFamily.InterNetwork)
                     {
                         ServerAddr = ip;
-                        changeState("New Server IP address: " + ServerAddr.ToString() + ", press Ctl + R to change.", 5000);
+                        changeState("New Server IP address: " + ServerAddr.ToString() + ", press Ctl + R to change.", 3000);
                         break;
                     }
                 }
@@ -90,11 +106,14 @@ namespace Home
                         return;
                     ServerAddr = IPAddress.Parse(sinfo.IP);
                     ServerPort = sinfo.Port;
+                    backgroundWorkerListenClient.CancelAsync();
                     listener.Stop();
                     listener = new TcpListener(IPAddress.Any, ServerPort);
                     listener.Start();
                     changeState("Start new Server with IP address: " + ServerAddr.ToString() +
                         ", port: " + ServerPort.ToString(), 3000);
+                    backgroundWorkerListenClient.WorkerSupportsCancellation = true;
+                    backgroundWorkerListenClient.RunWorkerAsync();
                 }
                 e.SuppressKeyPress = true;  // stops bing! also sets handeled which stop event bubbling
             }
@@ -106,11 +125,13 @@ namespace Home
             {
                 this.radioButtonLED3.Checked = false;
                 this.radioButtonLED3.Text = "Off";
+                this.Command.Enqueue("LED3 Off");
             }
             else
             {
                 this.radioButtonLED3.Checked = true;
                 this.radioButtonLED3.Text = "On";
+                this.Command.Enqueue("LED3 On");
             }
         }
 
@@ -120,17 +141,19 @@ namespace Home
             {
                 this.radioButtonLED4.Checked = false;
                 this.radioButtonLED4.Text = "Off";
+                this.Command.Enqueue("LED4 Off");
             }
             else
             {
                 this.radioButtonLED4.Checked = true;
                 this.radioButtonLED4.Text = "On";
+                this.Command.Enqueue("LED4 On");
             }
         }
 
         private void radioButtonSW_Click(object sender, EventArgs e)
         {
-            this.changeState("This device cannot change from Server.", 3000);
+            this.changeState("This device cannot change from Server.", 1000);
         }
         
         private void Home_Load(object sender, EventArgs e)
@@ -139,11 +162,14 @@ namespace Home
             listener = new TcpListener(IPAddress.Any, ServerPort);
             listener.Start();
             changeState("Server start with IP: " + ServerAddr.ToString() + " port: " + ServerPort.ToString(), 3000);
+            backgroundWorkerListenClient.WorkerSupportsCancellation = true;
+            backgroundWorkerListenClient.RunWorkerAsync();
         }
 
         private void Home_closing(object sender, EventArgs e)
         {
             this.timerUI.Stop();
+            listener.Stop();
             if (backgroundWorkerListenClient.IsBusy)
                 backgroundWorkerListenClient.CancelAsync();
         }
@@ -152,6 +178,12 @@ namespace Home
         {
             if (delayHide > 0)
                 delayHide--;
+            else if (states.Count != 0)
+            {
+                MessageState state = states.Dequeue();
+                delayHide = state.duration;
+                this.textBoxState.Text = states.Count.ToString() + " Msg: " + state.msg;
+            }
             else
             {
                 this.textBoxState.Text = "Idle";
@@ -160,6 +192,7 @@ namespace Home
 
         private void backgroundWorkerListenClient_DoWork(object sender, DoWorkEventArgs e)
         {
+            changeState("Back Ground Worker is running", 1000);
             // wait for connection
             while (true)
             {
@@ -168,23 +201,50 @@ namespace Home
                     client = listener.AcceptTcpClient();
                     str = new StreamReader(client.GetStream());
                     stw = new StreamWriter(client.GetStream());
-                    if (client.Available != 0)
+                    stw.AutoFlush = true;
+                    while (client.Connected)
                     {
-                        try
+                        if (client.Available != 0)
                         {
-                            string mes = str.ReadLine();
-                            if (mes == "Send me data")
+                            try
                             {
-                                stw.WriteLine("OK");
+                                string mes = str.ReadLine();
+                                changeState(mes, 300);
+                                if (mes == "send me data")
+                                {
+                                    if (Command.Count != 0)
+                                    {
+                                        stw.WriteLine(Command.Dequeue());
+                                    }
+                                    else
+                                    {
+                                        stw.WriteLine("OK");
+                                    }
+                                }
+                                else if (mes == "Switch on")
+                                {
+                                    radioButtonSW.Checked = true;
+                                    radioButtonSW.Text = "On";
+                                }
+                                else if (mes == "Switch off")
+                                {
+                                    radioButtonSW.Checked = false;
+                                    radioButtonSW.Text = "Off";
+                                }
                             }
-                        }
-                        catch (Exception)
-                        {
-                            break;
+                            catch (Exception)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
             }
+        }
+
+        private void backgroundWorkerClientProcess_DoWork(object sender, DoWorkEventArgs e)
+        {
+
         }
     }
 }
